@@ -29,10 +29,10 @@ pipeline {
         }
 
         stage('Deploy to Azure Development') {
-            when {
-                environment name: 'REPOSITORY_BRANCH', value: 'development'
-                beforeAgent true
-            }
+            // when {
+            //     environment name: 'REPOSITORY_BRANCH', value: 'development'
+            //     beforeAgent true
+            // }
 
             options { 
                 retry(3) 
