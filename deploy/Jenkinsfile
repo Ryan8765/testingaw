@@ -14,8 +14,7 @@ def distId = 'E1Q83HI6WMP98A';
 
 pipeline {
     agent any
-    stages {
-
+    stages{
 
         stage('Install Dependenciess') {
             steps {
@@ -47,8 +46,8 @@ pipeline {
             }
         }
 
-        stage('Archive Production Deployments') {
-        }
+        //stage('Archive Production Deployments') {
+        //}
 
     }
 
