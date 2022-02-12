@@ -39,9 +39,9 @@ pipeline {
             }
 
             steps {
-                bat 'aws s3 cp --recursive ./build s3://' + s3bucket + '/'
-                bat 'aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./build/service-worker.js s3://' + s3bucket + '/'
-                bat 'aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./build/index.html s3://' + s3bucket + '/'
+                bat 'aws s3 cp --recursive ./build s3://' + s3Bucket + '/'
+                bat 'aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./build/service-worker.js s3://' + s3Bucket + '/'
+                bat 'aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./build/index.html s3://' + s3Bucket + '/'
                 bat 'aws cloudfront create-invalidation --distribution-id ' + distId + ' --paths /*'        
             }
         }
