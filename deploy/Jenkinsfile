@@ -38,7 +38,9 @@ pipeline {
                 retry(3) 
             }
 
+
             steps {
+                bat 'echo ' + %PATH%
                 bat 'aws s3 cp --recursive ./build s3://' + s3Bucket + '/'
                 bat 'aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./build/service-worker.js s3://' + s3Bucket + '/'
                 bat 'aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./build/index.html s3://' + s3Bucket + '/'
