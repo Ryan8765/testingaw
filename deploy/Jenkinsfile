@@ -1,0 +1,72 @@
+/**
+    This is the main pipeline used for all React applications.
+
+    successEmailAddress - email address to send to
+    REPOSITORY_BRANCH - The branch of the current deployment (sent via webhook to Jenkins from beanstalk)
+    AZURE_CRED_ID - Credential ID for Azure (stored in Jenkins securely)
+    RES_GROUP - The resource group for the web app (obtained from Azure)
+    WEB_APP - The name of the web app in Azure.
+*/
+
+def email = 'rmhaas221@gmail.com';
+def s3Bucket = 'bogusoasistestqb';
+def distId = 'E1Q83HI6WMP98A';
+
+pipeline {
+    agent any
+    stages {
+
+        stage('Install Dependenciess') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Build the Project') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+
+        stage('Deploy to Azure Development') {
+            when {
+                environment name: 'REPOSITORY_BRANCH', value: 'development'
+                beforeAgent true
+            }
+
+            options { 
+                retry(3) 
+            }
+
+            steps {
+                bat 'aws s3 cp --recursive ./build s3://' + s3bucket + '/'
+                bat 'aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./build/service-worker.js s3://' + s3bucket + '/'
+                bat 'aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./build/index.html s3://' + s3bucket + '/'
+                bat 'aws cloudfront create-invalidation --distribution-id ' + distId + ' --paths /*'        
+            }
+        }
+
+        stage('Archive Production Deployments') {
+        }
+
+    }
+
+    post {
+        always {
+            //archiveArtifacts artifacts: "build/**/*.*", onlyIfSuccessful: true
+            cleanWs()
+        }
+
+        //On Success - always send an email to the team involved.
+        success {
+            mail bcc: '', body: "<br><span style=\'font-size:20px; font-weight:bolder;\'>Successful Deployment</span><br><br><br>Jenkins Job Name: ${JOB_NAME} <br>Build Number: ${BUILD_NUMBER}", cc: '', charset: 'UTF-8', from: "rhaas@mcftech.com", mimeType: 'text/html', replyTo: '', subject: "Jenkins Successful Deployment ${JOB_NAME}", to: email;
+        }
+
+        failure {
+            emailext attachLog: true, body: "There were some pipeline errors found.  Please see the logs below. Build URL: ${BUILD_URL}", subject: 'Pipeline Errors', to:email;
+
+            emailext attachLog: true, body: "There were some pipeline errors found.  Please see the logs below. Build URL: ${BUILD_URL}", subject: 'Pipeline Errors', to:email;
+        }
+
+    }
+}
