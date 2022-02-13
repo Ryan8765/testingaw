@@ -71,3 +71,7 @@ Resources:
             ModeBlock: true
             Override: true
             Protection: true
+Outputs:
+  CloudfrontDistribution:
+    Description: "Client distribution object"
+    Value: !Ref CloudFront
