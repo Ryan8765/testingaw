@@ -50,14 +50,15 @@ pipeline {
             }
             steps {
                 script {
-                    env.DISTID = bat(script: withCredentials([aws(accessKeyVariable:'AWS_ACCESS_KEY_ID',credentialsId:'AWS-CREDS',secretKeyVariable:'AWS_SECRET_ACCESS_KEY')]) {
-                    //bat 'aws cloudformation describe-stacks --stack-name ' + s3Bucket
-                    bat 'aws cloudformation describe-stacks \
+                    withCredentials([aws(accessKeyVariable:'AWS_ACCESS_KEY_ID',credentialsId:'AWS-CREDS',secretKeyVariable:'AWS_SECRET_ACCESS_KEY')]) {
+                        env.DISTID = bat(script:'aws cloudformation describe-stacks \
                             --stack-name ' + s3Bucket + ' \
                             --query "Stacks[0].Outputs[?OutputKey==`CloudfrontDistribution`].OutputValue" \
-                            --output text'
-                    }, returnStdout: true).trim()
+                            --output text', returnStdout: true).trim()
+                        //bat 'aws cloudformation describe-stacks --stack-name ' + s3Bucket
+                    }
                 }
+                
             }
         }
 
