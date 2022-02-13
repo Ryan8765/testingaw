@@ -49,13 +49,15 @@ pipeline {
                 retry(2)
             }
             steps {
-                withCredentials([aws(accessKeyVariable:'AWS_ACCESS_KEY_ID',credentialsId:'AWS-CREDS',secretKeyVariable:'AWS_SECRET_ACCESS_KEY')]) {
+                script {
+                    env.DISTID = bat(script: withCredentials([aws(accessKeyVariable:'AWS_ACCESS_KEY_ID',credentialsId:'AWS-CREDS',secretKeyVariable:'AWS_SECRET_ACCESS_KEY')]) {
                     //bat 'aws cloudformation describe-stacks --stack-name ' + s3Bucket
                     bat 'aws cloudformation describe-stacks \
                             --stack-name ' + s3Bucket + ' \
                             --query "Stacks[0].Outputs[?OutputKey==`CloudfrontDistribution`].OutputValue" \
                             --output text'
-                } 
+                    }, returnStdout: true).trim()
+                }
             }
         }
 
@@ -75,7 +77,7 @@ pipeline {
                     bat 'aws s3 cp --recursive ./build s3://' + s3Bucket + '/'
                     //bat 'aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./build/service-worker.js s3://' + s3Bucket + '/'
                     bat 'aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./build/index.html s3://' + s3Bucket + '/'
-                    bat 'aws cloudfront create-invalidation --distribution-id ' + distId + ' --paths /*'
+                    bat 'aws cloudfront create-invalidation --distribution-id ' + DISTID + ' --paths /*'
                 }               
             }
         }
