@@ -9,7 +9,7 @@
 */
 
 def email = 'rmhaas221@gmail.com';
-def s3Bucket = 'bogusoasistestqb';
+def s3Bucket = 'bogusoasistestqbtwo';
 def distId = 'E1Q83HI6WMP98A';
 
 pipeline {
@@ -18,6 +18,7 @@ pipeline {
         AWS_DEFAULT_REGION="us-east-1"
 
     }
+    
     stages{
 
         stage('Install Dependenciess') {
@@ -32,7 +33,29 @@ pipeline {
             }
         }
 
-        stage('Deploy to Azure Development') {
+        stage('Create/Update Cloudformation Template') {
+            options {
+                retry(2)
+            }
+            steps {
+                withCredentials([aws(accessKeyVariable:'AWS_ACCESS_KEY_ID',credentialsId:'AWS-CREDS',secretKeyVariable:'AWS_SECRET_ACCESS_KEY')]) {
+                    bat 'aws cloudformation deploy --template-file ./deploy/cloudformation.yml --stack-name ' + s3Bucket + ' --parameter-overrides BucketName=' + s3Bucket
+                } 
+            }
+        }
+
+        stage('Echo cloudformation template') {
+            options {
+                retry(2)
+            }
+            steps {
+                withCredentials([aws(accessKeyVariable:'AWS_ACCESS_KEY_ID',credentialsId:'AWS-CREDS',secretKeyVariable:'AWS_SECRET_ACCESS_KEY')]) {
+                    bat 'aws cloudformation describe-stacks --stack-name ' + s3Bucket
+                } 
+            }
+        }
+
+        stage('Deploy to AWS Development') {
             // when {
             //     environment name: 'REPOSITORY_BRANCH', value: 'development'
             //     beforeAgent true
@@ -45,9 +68,8 @@ pipeline {
 
             steps {
                 withCredentials([aws(accessKeyVariable:'AWS_ACCESS_KEY_ID',credentialsId:'AWS-CREDS',secretKeyVariable:'AWS_SECRET_ACCESS_KEY')]) {
-                    bat "echo %PATH%"
                     bat 'aws s3 cp --recursive ./build s3://' + s3Bucket + '/'
-                    bat 'aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./build/service-worker.js s3://' + s3Bucket + '/'
+                    //bat 'aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./build/service-worker.js s3://' + s3Bucket + '/'
                     bat 'aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./build/index.html s3://' + s3Bucket + '/'
                     bat 'aws cloudfront create-invalidation --distribution-id ' + distId + ' --paths /*'
                 }               
