@@ -44,24 +44,23 @@ pipeline {
             }
         }
 
-        // stage('Echo cloudformation template') {
-        //     options {
-        //         retry(2)
-        //     }
-        //     steps {
-        //         script {
-        //             withCredentials([aws(accessKeyVariable:'AWS_ACCESS_KEY_ID',credentialsId:'AWS-CREDS',secretKeyVariable:'AWS_SECRET_ACCESS_KEY')]) {
-        //                 def distributionId = bat(script:'aws cloudformation describe-stacks \
-        //                     --stack-name ' + s3Bucket + ' \
-        //                     --query "Stacks[0].Outputs[?OutputKey==`CloudfrontDistribution`].OutputValue" \
-        //                     --output text', returnStdout: true).trim()
-        //                 env.DISTID = distributionId
-        //                 //bat 'aws cloudformation describe-stacks --stack-name ' + s3Bucket
-        //             }
-        //         }
+        stage('Echo cloudformation template') {
+            options {
+                retry(2)
+            }
+            steps {
+                script {
+                    withCredentials([aws(accessKeyVariable:'AWS_ACCESS_KEY_ID',credentialsId:'AWS-CREDS',secretKeyVariable:'AWS_SECRET_ACCESS_KEY')]) {
+                        env.DISTID = bat(script:'aws cloudformation describe-stacks \
+                            --stack-name ' + s3Bucket + ' \
+                            --query "Stacks[0].Outputs[?OutputKey==`CloudfrontDistribution`].OutputValue" \
+                            --output text', returnStdout: true).trim()
+                        //bat 'aws cloudformation describe-stacks --stack-name ' + s3Bucket
+                    }
+                }
                 
-        //     }
-        // }
+            }
+        }
 
         stage('Deploy to AWS Development') {
             // when {
@@ -73,23 +72,13 @@ pipeline {
                 retry(3) 
             }
 
-            environment {
-                DISTRIBUTION = withCredentials([aws(accessKeyVariable:'AWS_ACCESS_KEY_ID',credentialsId:'AWS-CREDS',secretKeyVariable:'AWS_SECRET_ACCESS_KEY')]) {
-                        bat(script:'aws cloudformation describe-stacks \
-                            --stack-name ' + s3Bucket + ' \
-                            --query "Stacks[0].Outputs[?OutputKey==`CloudfrontDistribution`].OutputValue" \
-                            --output text', returnStdout: true).trim()
-                        //bat 'aws cloudformation describe-stacks --stack-name ' + s3Bucket
-                    }
-            }
-
 
             steps {
                 withCredentials([aws(accessKeyVariable:'AWS_ACCESS_KEY_ID',credentialsId:'AWS-CREDS',secretKeyVariable:'AWS_SECRET_ACCESS_KEY')]) {
                     bat 'aws s3 cp --recursive ./build s3://' + s3Bucket + '/'
                     //bat 'aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./build/service-worker.js s3://' + s3Bucket + '/'
                     bat 'aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./build/index.html s3://' + s3Bucket + '/'
-                    bat 'aws cloudfront create-invalidation --distribution-id ' + DISTRIBUTION + ' --paths /*'
+                    bat 'aws cloudfront create-invalidation --distribution-id ' + DISTID + ' --paths /*'
                 }               
             }
         }
