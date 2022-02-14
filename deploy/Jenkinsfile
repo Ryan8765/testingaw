@@ -74,8 +74,8 @@ pipeline {
             }
 
             environment {
-                withCredentials([aws(accessKeyVariable:'AWS_ACCESS_KEY_ID',credentialsId:'AWS-CREDS',secretKeyVariable:'AWS_SECRET_ACCESS_KEY')]) {
-                        DISTRIBUTION = bat(script:'aws cloudformation describe-stacks \
+                DISTRIBUTION = withCredentials([aws(accessKeyVariable:'AWS_ACCESS_KEY_ID',credentialsId:'AWS-CREDS',secretKeyVariable:'AWS_SECRET_ACCESS_KEY')]) {
+                        bat(script:'aws cloudformation describe-stacks \
                             --stack-name ' + s3Bucket + ' \
                             --query "Stacks[0].Outputs[?OutputKey==`CloudfrontDistribution`].OutputValue" \
                             --output text', returnStdout: true).trim()
