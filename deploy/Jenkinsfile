@@ -10,7 +10,7 @@
 
 def email = 'rmhaas221@gmail.com';
 def s3Bucket = 'bogusoasistestqbtwo';
-def distId = 'E1Q83HI6WMP98A';
+// def distId = 'E1Q83HI6WMP98A';
 
 pipeline {
     agent any
