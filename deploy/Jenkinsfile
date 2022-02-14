@@ -54,7 +54,7 @@ pipeline {
                         env.DISTID = bat(script:'aws cloudformation describe-stacks \
                             --stack-name ' + s3Bucket + ' \
                             --query "Stacks[0].Outputs[?OutputKey==`CloudfrontDistribution`].OutputValue" \
-                            --output text', returnStdout: true).trim()
+                            --output text', returnStdout: true).trim().readLines().drop(1).join(" ")
                         //bat 'aws cloudformation describe-stacks --stack-name ' + s3Bucket
                     }
                 }
